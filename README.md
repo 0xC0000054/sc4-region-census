@@ -4,7 +4,7 @@ A DLL Plugin for SimCity 4 that adds a region census UI.
 
 The region census panel shows the totals for each RCI group in the region. It also allows the player
 to export a [CSV](https://en.wikipedia.org/wiki/Comma-separated_values)file with statistics for the individual cities.
-The CSV file is written using UTF-8 encoding.
+The CSV file is written to `Documents/SimCity 4/Region_View/<Region Name>` using UTF-8 encoding.
 
 ![Region Census UI](images/RegionViewCensusDialog.jpg)
 
