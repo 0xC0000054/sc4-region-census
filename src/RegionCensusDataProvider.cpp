@@ -45,20 +45,22 @@ void RegionCensusDataProvider::PostRegionInit(cISC4Region* pRegion)
 {
 	if (!initialized)
 	{
-		initialized = true;
+		Logger& logger = Logger::GetInstance();
 
+		initialized = true;
 		if (pRegion)
 		{
-			eastl::vector<cISC4Region::cLocation> cityLocations;
-
-			pRegion->GetCityLocations(cityLocations);
-
-			size_t count = cityLocations.size();
-
-			if (count > 0)
+			try
 			{
-				try
+				eastl::vector<cISC4Region::cLocation> cityLocations;
+
+				pRegion->GetCityLocations(cityLocations);
+
+				size_t count = cityLocations.size();
+
+				if (count > 0)
 				{
+
 					for (size_t i = 0; i < count; i++)
 					{
 						const cISC4Region::cLocation& location = cityLocations[i];
@@ -101,15 +103,21 @@ void RegionCensusDataProvider::PostRegionInit(cISC4Region* pRegion)
 						}
 					}
 				}
-				catch (const std::exception& e)
-				{
-					Logger::GetInstance().WriteLineFormatted(
-						LogLevel::Error,
-						"Error loading the region census data: %s",
-						e.what());
-					Clear();
-				}
 			}
+			catch (const std::exception& e)
+			{
+				logger.WriteLineFormatted(
+					LogLevel::Error,
+					"Error loading the region census data: %s",
+					e.what());
+				Clear();
+			}
+		}
+		else
+		{
+			logger.WriteLine(
+				LogLevel::Error,
+				"Error loading the region census data, the region pointer was null.");
 		}
 	}
 }
