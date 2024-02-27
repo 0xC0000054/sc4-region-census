@@ -12,6 +12,7 @@
 
 #include "RegionCensusWinManager.h"
 #include "FileSystem.h"
+#include "Logger.h"
 #include "GZCLSIDDefs.h"
 #include "GZWinKeyAcceleratorUtil.h"
 #include "cGZMessage.h"
@@ -140,6 +141,8 @@ void RegionCensusWinManager::PostRegionInit()
 	{
 		initialized = true;
 
+		Logger& logger = Logger::GetInstance();
+
 		cISC4AppPtr pSC4App;
 
 		if (pSC4App)
@@ -153,11 +156,28 @@ void RegionCensusWinManager::PostRegionInit()
 				if (pWinSC4App)
 				{
 					// We increment the reference count on the window we get from GetChildWindowFromID
-					// because this window reference to perform clean up when a/ region shutdown
+					// because this window reference to perform clean up when a region shutdown
 					// message is received.
 					pRegionScreen = pWinSC4App->GetChildWindowFromID(kGZWin_SC4WinRegionScreen);
+
+					if (!pRegionScreen)
+					{
+						logger.WriteLine(LogLevel::Error, "The region screen window pointer was null.");
+						return;
+					}
+
 					pRegionScreen->AddRef();
 				}
+				else
+				{
+					logger.WriteLine(LogLevel::Error, "The SC4App window pointer was null.");
+					return;
+				}
+			}
+			else
+			{
+				logger.WriteLine(LogLevel::Error, "The main window pointer was null.");
+				return;
 			}
 
 			regionCensusDataProvider.PostRegionInit(pSC4App->GetRegion());
@@ -169,13 +189,31 @@ void RegionCensusWinManager::PostRegionInit()
 				pCheatMgr->AddNotification2(this, 0);
 				pCheatMgr->RegisterCheatCode(kToggleRegionCensusDialogCheatID, cRZBaseString("RegionCensus"));
 			}
-		}
+			else
+			{
+				logger.WriteLine(LogLevel::Error, "The cheat manager pointer was null.");
+			}
 
-		mouseMessageHook.reset(SetWindowsHookExA(
-			WH_MOUSE,
-			reinterpret_cast<HOOKPROC>(GetThunk()),
-			nullptr,
-			GetCurrentThreadId()));
+			mouseMessageHook.reset(SetWindowsHookExA(
+				WH_MOUSE,
+				reinterpret_cast<HOOKPROC>(GetThunk()),
+				nullptr,
+				GetCurrentThreadId()));
+
+			if (!mouseMessageHook)
+			{
+				uint32_t lastError = GetLastError();
+
+				logger.WriteLineFormatted(
+					LogLevel::Error,
+					"Failed to set the middle click message hook. Last error=0x%08X",
+					lastError);
+			}
+		}
+		else
+		{
+			logger.WriteLine(LogLevel::Error, "The SC4 application pointer was null.");
+		}
 	}
 }
 
