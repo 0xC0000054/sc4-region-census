@@ -42,7 +42,7 @@ class cISC4Region : public cIGZUnknown
 		virtual bool Shutdown(void) = 0;
 		virtual bool Delete(void) = 0;
 
-		virtual cISC4RegionalCity*& GetCity(uint32_t x, uint32_t y) = 0;
+		virtual cISC4RegionalCity** GetCity(uint32_t x, uint32_t y) = 0;
 		virtual cISC4RegionalCity**& InsertCity(cISC4RegionalCity* pCity) = 0;
 		virtual bool RemoveCity(cISC4RegionalCity*& pCity) = 0;
 		virtual bool DeleteCity(cISC4RegionalCity*& pCity) = 0;

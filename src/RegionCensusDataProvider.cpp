@@ -67,10 +67,12 @@ void RegionCensusDataProvider::PostRegionInit(cISC4Region* pRegion)
 
 						// The city pointer should not be released.
 
-						cISC4RegionalCity*& pRegionalCity = pRegion->GetCity(location.x, location.y);
+						cISC4RegionalCity** ppRegionalCity = pRegion->GetCity(location.x, location.y);
 
-						if (pRegionalCity)
+						if (ppRegionalCity && *ppRegionalCity)
 						{
+							cISC4RegionalCity* pRegionalCity = *ppRegionalCity;
+
 							if (pRegionalCity->GetEstablished())
 							{
 								regionCensusTotals.developedCities++;
