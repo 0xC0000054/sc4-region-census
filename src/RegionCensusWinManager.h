@@ -12,19 +12,18 @@
 
 #pragma once
 #include "cIGZMessageTarget2.h"
+#include "cIGZWinProcFilterW32.h"
 #include "cIGZWinMessageFilter.h"
 #include "IRegionCensusWinManager.h"
 #include "RegionCensusDataProvider.h"
 #include "RegionCensusWin.h"
 #include <Windows.h>
-#include "CAuxThunk.h"
-#include "wil\resource.h"
 
 class cIGZMessage2Standard;
 class cIGZMessageServer2;
 
 class RegionCensusWinManager final :
-	private CAuxThunk<RegionCensusWinManager>,
+	private cIGZWinProcFilterW32,
 	private cIGZMessageTarget2,
 	private IRegionCensusWinManager
 {
@@ -41,12 +40,26 @@ public:
 	bool RegisterMessages(cIGZMessageServer2* pMsgServ);
 
 private:
+	// cIGZWinProcFilterW32
+
+	LRESULT FilterMessage(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParram,
+		LPARAM lParam,
+		bool& handled) override;
+
+	// IRegionCensusWinManager
 
 	const IRegionCensusDataProvider& GetRegionCensusData() override;
 
 	cIGZWin* GetParentWin() override;
 
+	// cIGZMessageTarget2
+
 	bool DoMessage(cIGZMessage2* pMsg) override;
+
+	// Private members
 
 	void PostRegionInit();
 
@@ -56,13 +69,12 @@ private:
 
 	void ToggleRegionCensusWindowVisibility();
 
-	LRESULT MouseMessageHookProc(int nCode, WPARAM wParam, LPARAM lParam);
+	bool UpdateWindowMessageHookRegistration(bool registerHook);
 
 	uint32_t refCount;
 	RegionCensusDataProvider regionCensusDataProvider;
 	RegionCensusWin regionCensusWin;
 	cIGZWin* pRegionScreen;
 	bool initialized;
-	wil::unique_hhook mouseMessageHook;
 };
 

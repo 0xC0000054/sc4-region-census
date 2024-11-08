@@ -46,7 +46,6 @@ See [LICENSE.txt](LICENSE.txt) for more information.
 [EASTL](https://github.com/electronicarts/EASTL) Located in the vendor folder, BSD 3-Clause License.    
 [SC4Fix](https://github.com/nsgomez/sc4fix) - MIT License.     
 [Windows Implementation Library](https://github.com/microsoft/wil) - MIT License    
-[ATL/AUX for ATL 7](https://web.archive.org/web/20080105105225/https://nozillium.com/atlaux/) - Public Domain    
 
 # Source Code
 

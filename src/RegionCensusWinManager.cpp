@@ -17,6 +17,8 @@
 #include "GZWinKeyAcceleratorUtil.h"
 #include "cGZMessage.h"
 #include "cGZPersistResourceKey.h"
+#include "cIGZCanvas.h"
+#include "cIGZCanvasW32.h"
 #include "cIGZCheatCodeManager.h"
 #include "cIGZMessage2Standard.h"
 #include "cIGZMessageServer2.h"
@@ -44,10 +46,8 @@ RegionCensusWinManager::RegionCensusWinManager()
 	  regionCensusDataProvider(),
 	  regionCensusWin(this),
 	  pRegionScreen(nullptr),
-	  initialized(false),
-	  mouseMessageHook()
+	  initialized(false)
 {
-	InitThunk(reinterpret_cast<TMFP>(&RegionCensusWinManager::MouseMessageHookProc), this);
 }
 
 bool RegionCensusWinManager::QueryInterface(uint32_t riid, void** ppvObj)
@@ -194,20 +194,11 @@ void RegionCensusWinManager::PostRegionInit()
 				logger.WriteLine(LogLevel::Error, "The cheat manager pointer was null.");
 			}
 
-			mouseMessageHook.reset(SetWindowsHookExA(
-				WH_MOUSE,
-				reinterpret_cast<HOOKPROC>(GetThunk()),
-				nullptr,
-				GetCurrentThreadId()));
-
-			if (!mouseMessageHook)
+			if (!UpdateWindowMessageHookRegistration(true))
 			{
-				uint32_t lastError = GetLastError();
-
-				logger.WriteLineFormatted(
+				logger.WriteLine(
 					LogLevel::Error,
-					"Failed to set the middle click message hook. Last error=0x%08X",
-					lastError);
+					"Failed to set the middle click message hook.");
 			}
 		}
 		else
@@ -245,7 +236,7 @@ void RegionCensusWinManager::PreRegionShutdown()
 		}
 
 		regionCensusDataProvider.PreRegionShutdown();
-		mouseMessageHook.reset();
+		UpdateWindowMessageHookRegistration(false);
 	}
 }
 
@@ -271,16 +262,34 @@ void RegionCensusWinManager::ToggleRegionCensusWindowVisibility()
 	}
 }
 
-LRESULT RegionCensusWinManager::MouseMessageHookProc(int nCode, WPARAM wParam, LPARAM lParam)
+bool RegionCensusWinManager::UpdateWindowMessageHookRegistration(bool registerHook)
 {
-	if (nCode >= 0)
+	bool result = false;
+
+	cIGZCanvasPtr pCanvas;
+
+	if (pCanvas)
 	{
-		if (wParam == WM_MBUTTONUP)
+		cRZAutoRefCount<cIGZCanvasW32> pCanvasW32;
+
+		if (pCanvas->QueryInterface(GZIID_cIGZCanvasW32, pCanvasW32.AsPPVoid()))
 		{
-			ToggleRegionCensusWindowVisibility();
+			result = pCanvasW32->AddWinProcFilter(this, registerHook);
 		}
 	}
 
-	return CallNextHookEx(mouseMessageHook.get(), nCode, wParam, lParam);
+	return result;
 }
 
+LRESULT RegionCensusWinManager::FilterMessage(HWND hWnd, UINT uMsg, WPARAM wParram, LPARAM lParam, bool& handled)
+{
+	handled = false;
+
+	if (uMsg == WM_MBUTTONUP)
+	{
+		handled = true;
+		ToggleRegionCensusWindowVisibility();
+	}
+
+	return 0;
+}
